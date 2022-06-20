@@ -1,0 +1,836 @@
+FORMAT: 1A
+HOST: https://edume-api.herokuapp.com
+
+# eduMe API
+
+###  Join the eduMe slack community
+
+If you are getting started with integrating eduMe into your product or even if you have already implemented and are looking at ways to further improve your integrations then join our Slack community for support, updates and best practices.
+To join the community, <a href=https://communityinviter.com/apps/edumeondemand/join-the-channel>click here</a> to get started.
+
+###  Authorization
+
+Authorization in the eduMe API is handled through the use of API keys, which will look something like `5908ff10-9e8e-4523-a418-2305c0d1ef0b`. These can be unique to a specific group or apply to the whole company. For all requests to the eduMe API, you should include this key in the `X-API-KEY` header.
+To receive an API key, <a href = "mailto:support@edume.com?subject=API Key Request&body = Message"> contact us</a>.
+
+
+# Group  Status
+##  Health Check [/public/healthCheck]
+
+###  Get API status [GET]
+Returns the status of the backend.
+
+**Use Cases**:
++ Check if the service is running
++ Confirm your API key is correct
+
+
+**Considerations**:
++ Can also check the [status](https://edume.statuspage.io/) page for incident history
+
+
+**Related Endpoints**:
++ All endpoints
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (application/json)
+
+
+        {
+            "status": "ok"
+        }
+
+
+# Group  Users
+##  User Creation [/public/team/{teamId}/user]
+
+###  Create a User [POST]
+When the user is created, they will be automatically assigned to the specified team, as well as the group.
+
+**Use Cases**:
++ Add users to account when getting started or onboarding a new user
+
+
+**Considerations**:
++ Not required if using a seamless link flow (new users added by default with seamless links on first access)
+
+
+**Related Endpoints**:
++ Delete a User
++ Get All Users
++ Update a User
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + teamId: `312` (number, required) - The ID of the team to create the user in
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
+    + Attributes
+        + firstName: `Alexander` (string, required) - The first name of the user. Minimum length: 2
+        + lastName: `Corte` (string, required) - The last name of the user. Minimum length: 2
+        + One Of
+            + email: `alex.cortez@gmail.com` (string, optional) - The email of the user. Only 1 of email or phone can be provided.
+            + phone: `13457663445` (string, optional) - The phone number of the user. Only 1 of email or phone can be provided.
+        + employeeId: `asfe2f` (string, optional) - An employee ID for the user, or other additional detail.
+        + sendInvite: `true` (boolean, optional) - Whether to send an invitation email (or SMS) to the user. Set this to false if you prefer to contact your users yourself.
+            + default: true
+
+
++ Response 200 (application/json)
+
+
+        {
+            "activated": false,
+            "createdAt": "2019-01-22T16:36:47.537Z",
+            "customerId": 159,
+            "deleted": false,
+            "email": "alex.cortez@gmail.com",
+            "employeeId": "asfe2f",
+            "firstName": "Alexander",
+            "id": 91691,
+            "language": "en",
+            "lastName": "Cortez",
+            "phone": null
+        }
+
+
+##  List Users [/public/users{?activated}{?sort}{?groupId}]
+
+###  List Users [GET]
+List all users within a specific group who are activated and sort
+
+**Use Cases**:
++ Look up a user Id for User Management calls
++ Spot-check how many users have activated
+
+
+**Considerations**:
++ If using seamless link integration activation occurs the first time a user clicks a seamless link
++ If using seamless links or SSU then `activated=false` will always return an empty list
++ If users have been added to the system via upload or another method then `activated=false` will return a list of users that have not completed activation steps
+
+
+**Related Endpoints**:
++ Create a User
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + activated: `true` (boolean, required) - Whether to show activated or unactivated users only. Exclude to show all users.
+    + sort: `name` (string, required) - Set to `name` to sort alphabetically by last name, will otherwise sort by creation date.
+    + groupId: `98` (number, required) - Which group to get users from. Required when using customer-level API-key.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (application/json)
+
+
+        [
+            {
+                "activated": true,
+                "teamIds": [
+                    1406
+                ],
+                "teamNames": [
+                    "Quito"
+                ],
+                "createdAt": "2018-08-29T16:18:03.881Z",
+                "customerId": 5,
+                "deleted": false,
+                "email": "alex.cortez@gmail.com",
+                "employeeId": null,
+                "firstName": "Alexander",
+                "id": 82113,
+                "language": null,
+                "lastName": "Cortez",
+                "phone": null
+            },
+            {
+                "activated": true,
+                "teamIds": [
+                    1441
+                ],
+                "teamNames": [
+                    "Guayaquil"
+                ],
+                "createdAt": "2018-09-20T16:17:03.881Z",
+                "customerId": 5,
+                "deleted": false,
+                "email": "maria.rodriguez@yahoo.com",
+                "employeeId": null,
+                "firstName": "Maria",
+                "id": 82113,
+                "language": null,
+                "lastName": "Rodriguez",
+                "phone": null
+            }
+        ]
+
+
+##  User Management [/public/users/{userId}]
+
+###  Update a User [PUT]
+Update a user details relating to a `userId`
+
+**Use Cases**:
++ Update a users email address OR phone number, and employeeID (eId), First Name and Last Name
++ Add in employeeID (eId) when moving existing users to seamless links
+
+
+**Considerations**:
++ A user profile can have an `email` or a `phone` number but not both.
++ To get `userId` use `List Users in a group`
+
+
+**Related Endpoints**:
++ Create a User
++ Delete a User
++ Get All Users
++ List Users
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + userId: `312` (number, required) - The ID of the user to update
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
+    + Attributes
+        + firstName: `Alexander` (string, required) - The first name of the user. Minimum length: 2
+        + lastName: `Cortéz` (string, required) - The last name of the user. Minimum length: 2
+        + One Of
+            + email: `alex.cortez@gmail.com` (string, required) - The email of the user. Only 1 of email or phone can be provided.
+            + phone: `13457663445` (string, required) - The phone number of the user. Only 1 of email or phone can be provided.
+        + employeeId: `asfe2f` (string, optional) - An employee ID for the user, or other additional detail.
+
+
+    + Body
+
+            {
+                "firstName": "Alejandro",
+                "lastName": "Cortéz",
+                "email": "alex.cortez@gmail.com",
+                "employeeId": "asfe2f"
+            }
+
++ Response 200 (application/json)
+
+
+        {
+            "activated": false,
+            "createdAt": "2019-01-22T16:36:47.537Z",
+            "customerId": 159,
+            "deleted": false,
+            "email": "alex.cortez@gmail.com",
+            "employeeId": "asfe2f",
+            "firstName": "Alejandro",
+            "id": 91691,
+            "language": "en",
+            "lastName": "Cortéz",
+            "password": null,
+            "phone": null
+        }
+
+
+###  Delete a user [DELETE]
+Delete a user using the `userId`
+
+**Use Cases**:
++ User requests right to be forgotten
++ User added by accident
+
+
+**Considerations**:
++ Requires `userId` not eId.
++ To get `userId` you can use `Get All Users` with a filter on `phone`, `email`, or `eId`.
+
+
+**Related Endpoints**:
++ Create a User
++ Get All Users
++ Update a User
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + userId: `312` (number, required) - The ID of the user to delete.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 204 (application/json)
+
+
+# Group  Groups
+##  Get Groups [/public/groups?{groupId}]
+
+###  Get Group Details with Teams [GET]
++ With `groupId`- provides a list of teams within the group
++ Without `groupId` - provides a list of groups within the company
+
+
+**Use Cases**:
++ With `groupId` - To be able to define team details for seamless links or API calls
++ Without `groupId` - To be able to determine groupIds for API calls
+
+
+**Considerations**:
++ If you want to retrieve a list of groups within the company do not use a `groupId` in the call
++ If you want to retrieve a list of teams within a single group then provide the `groupId` in the call
+
+
+**Related Endpoints**:
++ Create a User
++ Get All Users
++ Get Stats for Teams
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + groupId: `98` (string, optional) - Available only for customer level API keys. If provided, it will return details only for the specified groupId. If omitted, it will return a list of groups details for the customer
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (application/json)
+
+
+        [
+            {
+                "teams": [
+                    {
+                        "createdAt": "2018-10-12T12:23:15.951Z",
+                        "id": 1406,
+                        "language": null,
+                        "name": "Quito",
+                        "numActivatedUsers": 42,
+                        "numNonActivatedUsers": 23,
+                        "numUsers": 65,
+                        "parentGroupId": 1405
+                    }
+                ],
+                "createdAt": "2018-10-12T12:23:15.944Z",
+                "id": 1405,
+                "language": null,
+                "name": "Ecuador",
+                "numActivatedUsers": 42,
+                "numNonActivatedUsers": 23,
+                "numUsers": 65,
+                "parentGroupId": null
+            }
+        ]
+
+
+# Group  Courses
+##  List courses [/public/courses{?groupId}]
+
+###  List Course [GET]
+Lists course details with modules, lessons, and teams assigned
+
+**Use Cases**:
++ Can be used when building seamless links to determine `moduleId` and `teamId`
++ Can be used within integrations to provide a course list outside of eduMe
+
+
+**Considerations**:
++ Requires `groupId`, use get group details with teams to obtain `groupId`
+
+
+**Related Endpoints**:
++ Get Group Details with Teams
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + groupId: `98` (number, required) - Which group to list courses from. Required when using customer-level API-key.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (application/json)
+
+
+        {
+            "colour": "#de8f6e",
+            "completionButtonText": null,
+            "completionButtonUrl": null,
+            "completionMessage": null,
+            "courseImageUrl": "https://edume-res.cloudinary.com/image/upload/v1522321721/deathstar_uploads_staging/s37yed7jgngsnxlr5xw5.png",
+            "courseKey": "cool_company_and_edume_418_2988",
+            "createdAt": "2019-01-21T19:24:28.916Z",
+            "customerId": 418,
+            "iconUrl": null,
+            "id": 6191,
+            "isSample": true,
+            "learnersCount": 54,
+            "lessonKeys": [
+                "meet_chelsea_porter_418_1969"
+            ],
+            "modules": [
+                {
+                    "courseId": 6191,
+                    "createdAt": "2019-01-21T19:24:28.924Z",
+                    "id": 6557,
+                    "learningUnitKey": "cool_company_and_edume_418_2988",
+                    "title": "Cool Company and eduMe",
+                    "updatedAt": "2019-01-21T19:24:28.924Z"
+                }
+            ],
+            "numModuleActivities": 1,
+            "public": false,
+            "published": true,
+            "ready": true,
+            "requiresEnrolment": false,
+            "teams": [
+                {
+                    "id": 2072,
+                    "name": "Trial Team",
+                    "parentGroupId": 2071
+                }
+            ],
+            "title": "Cool Company and eduMe",
+            "type": "ongoing",
+            "updatedAt": "2019-01-21T19:24:28.916Z"
+        }
+
+
+##  Assign retakes [/public/course/{courseId}/retake{?groupId}]
+
+###  Assign Course Retakes [POST]
+Returns a `success` status for every user included in the request. The possible error messages are:
+
+| Error message                      | Notes                                                                                       |
+|------------------------------------|---------------------------------------------------------------------------------------------|
+| `user_not_found`                   | User does not exist or has been deleted.                                                    |
+| `user_not_activated`               | User exists but has not activated their account.                                            |
+| `duplicate_user`                   | User identification matches at least one other user in the request.                         |
+| `course_not_available_for_user`    | User either not in a team assigned to that course, or not enrolled on an enrolment course.  |
+| `user_has_not_completed_course`    | User has not yet completed the course for the first time.                                   |
+
+
+**Use Cases**:
++ Re-assign a course to an individual learner for regular completion requirements for compliance purposes
++ Re-assign a course to a learner if they need to demonstrate understanding again
+
+
+**Considerations**:
++ Requires either `employeeIds`, `emails`, or `phoneNumbers` to be added
++ Requires `groupId`, use get group details with teams to obtain `groupId`
+
+
+**Related Endpoints**:
++ Get Group Details with Teams
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + courseId: `1234` (number, required) - The ID of the course to be reassigned
+    + groupId: `98` (number, required) - The ID of the group the course belongs to. Required when using customer-level API-key.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
+    + Attributes
+        + One Of
+            + employeeIds: `id1`,`id2` (array[string], optional) - The ID of the group the course belongs to. Required when using customer-level API-key.
+            + emails: `email1`,`email2` (array[string], optional) - Array of email addresses
+            + phoneNumbers: `phone1`,`phone2` (array[string], optional) - Array of phone numbers as strings, including international dialing code
+
+
+    + Body
+
+            {
+                "employeeIds": [
+                    "id1",
+                    "id2"
+                ],
+                "emails": [
+                    "one@edume.com",
+                    "two@edume.com"
+                ],
+                "phoneNumbers": [
+                    "441267123416",
+                    "441523153215"
+                ]
+            }
+
++ Response 200 (application/json)
+
+
+        {
+            "results": [
+                {
+                    "employeeId": "id1",
+                    "success": true
+                },
+                {
+                    "phone": "441523153215",
+                    "success": true
+                },
+                {
+                    "employeeId": "id2",
+                    "success": false,
+                    "reason": "user_has_not_completed_course"
+                },
+                {
+                    "email": "one@edume.com",
+                    "success": false,
+                    "reason": "duplicate_user"
+                },
+                {
+                    "email": "two@edume.com",
+                    "success": false,
+                    "reason": "user_not_found"
+                },
+                {
+                    "phone": "441267123416",
+                    "success": false,
+                    "reason": "course_not_available_for_user"
+                }
+            ]
+        }
+
+
+# Group  Stats
+##  Progress Stats [/v2/public/stats/course/{courseKey}{?dayRange}{?isoDate}{?includeTime}{?startDateTimeInMs}{?endDateTimeInMs}{?groupId}{?showLatestCompletion}]
+
+###  Progress CSV for Course [GET]
+Returns a CSV file of the progress of users in the group in a course, over a range of days.
+Note that the course key* is a mandatory requirement for this endpoint.
+The CSV will have the following columns, for each user in the group or team:
+
+| Column Heading             | Description                                                                          |
+|----------------------------|--------------------------------------------------------------------------------------|
+| **First Name**             | First name of the user.                                                              |
+| **Last Name**              | Last name of the user.                                                               |
+| **Email**                  | Email address of the user.                                                           |
+| **Phone**                  | Phone number of the user.                                                            |
+| **User info**              | An id or reference number associated with the user.                                  |
+| **User Activation Date**   | The date the user activated their account.                                           |
+| **Teams**                  | A comma-separated list of teams the user is assigned to.                             |
+| **Course Status**          | The user's status on the course. One of _Not started_, _In progress_ or _Completed_. |
+| **Course Start Date**      | The date the user started the course.                                                |
+| **Course Completion Date** | The date the user completed all lessons in the course.                               |
+| **Lesson ... Score**       | The user's score in each lesson. Each lesson will be contained in its own column.    |
+| **Overall Score**          | The user's overall score for the course, calculated as the average of every lesson. This is only present if the user has completed the whole course. |
+
+If the `showLatestCompletion=true` parameter is passed, the following column will be included after `Course Completion Date`:
+| Column Heading                    | Description                                                                   |
+|-----------------------------------|-------------------------------------------------------------------------------|
+| **Latest Course Completion Date** | The most recent date the user completed the course.                           |
+
+*The Course Key is located within the eduMe admin panel at the course level.  From within the course, select the cog icon towards the top right hand side of the screen.  From the resulting pop up, scroll to the bottom to locate the unique course key.
+
+
+**Use Cases**:
++ Used to show user completions within a course
++ Can be used in conjunction with course completion Webhook to ensure no user blocking flows within an advanced integration
+
+
+**Considerations**:
++ Course-key can be gained from list course details
++ When using specific start and end dates you will need to convert to unix timestamp in milliseconds
++ ISO 8601 takes the format of YYYY-MM-ddTHH:mm:ss+0000
++ Max date range is limited to 60 consecutive days
+
+
+**Related Endpoints**:
++ List Course
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + courseKey: `cool_company_and_edume_418_2988` (string, required) - The key of the course to get statistics for.
+    + dayRange: `30` (number, optional) - The number of days to get statistics for, starting backwards from the current date. If not provided, statistics for all time will be returned. Minimum: 1. Maximum: 60
+    + isoDate: `true` (boolean, optional) - Use iso 8601 for formatting the date, defaults to false.
+    + includeTime: `true` (boolean, optional) - Include time in the date fields, defaults to false.
+    + startDateTimeInMs: `1590707415000` (number, optional) - Unix timestamp in milliseconds (eg 1590707415000 = Thursday, 28 May 2020 23:10:15 GMT). Filters by last lesson completion >= `startDateTimeInMs`. It should not be used together with `dayRange`.
+    + endDateTimeInMs: `1590708615000` (number, optional) - Unix timestamp in milliseconds (eg 1590708615000 = Thursday, 28 May 2020 23:30:15 GMT). Filters by last lesson completion <= `endDateTimeInMs`. If not provided, no upper bound filter will be applied. It should not be used together with `dayRange`. Requires `startDateTimeInMs`.
+    + groupId: `98` (number, optional) - Which group to get progress stats from. Required when using customer-level API-key.
+    + showLatestCompletion: `true` (boolean, optional) - Include additional column showing the most recent course completion date, defaults to false.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (text/csv)
+
+
+        First name,Last name,Email,Phone,User info,User activation date (UTC),Teams,Course status,Course start date (UTC),Course completion date (UTC),Lesson 1 score,Lesson 2 score,Overall score
+        Alexander,Cortez,alex.cortez@gmail.com,,,14/06/2018,"Aidan",Not started,,,,,
+        Maria,Rodriguez,maria.rodriguez@yahoo.com,,,14/06/2018,"Aidan",Not started,,,,,
+
+
+##  User Stats [/public/stats/users{?groupId}]
+
+###  Get all users [GET]
++ Unfiltered: Return a list of all users and their status on courses & lessons
++ Filtered: A single user can be retrieved if one of the following filters is passed additionally as a parameter `email`, `phone`, `eId` (employee ID or external ID)
+
+
+**Use Cases**:
++ Unfiltered: A way to receive all user data including course completions across a group
++ Filtered: Way to spot-check an individual users course completions
+
+
+**Considerations**:
++ Unfiltered: Pulls report with all users without time restrictions - `Progress CSV for Course` is recommend for larger data sets
++ Filtered: Can only use one of the filter options at a time
+
+
+**Related Endpoints**:
++ Progress CSV for Course
++ Get Stats for Team
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + groupId: `98` (number, required) - Which group to get user stats from. Required when using customer-level API-key.
+    + email: `alex.cortez@gmail.com` (string, optional) - The email of the user. Only 1 of `email`, `phone` or `eId` can be provided.
+    + phone: `13457663445` (string, optional) - The phone number of the user with a minimum length of 9. Only 1 of `email`, `phone` or `eId` can be provided.
+    + eId: `asfe2f` (string, optional) - An employee ID for the user, or other additional detail. Only 1 of `email`, `phone` or `eId` can be provided.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (application/json)
+
+
+        {
+            "data": [
+                {
+                    "id": 19,
+                    "email": "example@edume.com",
+                    "phone": null,
+                    "firstName": "Example",
+                    "lastName": "Example",
+                    "createdAt": "2016-10-25T15:24:48.188Z",
+                    "employeeId": null,
+                    "activated": true,
+                    "group": "UK",
+                    "teams": [
+                        "edume-default"
+                    ],
+                    "courses": [],
+                    "lessons": []
+                },
+                {
+                    "id": 8443,
+                    "email": "example2@edume.com",
+                    "phone": null,
+                    "firstName": "Example",
+                    "lastName": "Example",
+                    "createdAt": "2017-02-22T16:09:01.365Z",
+                    "employeeId": null,
+                    "activated": true,
+                    "group": "UK",
+                    "teams": [
+                        "edume-default"
+                    ],
+                    "courses": [
+                        {
+                            "id": 4132,
+                            "title": "eduMe Demo course",
+                            "modules": [
+                                {
+                                    "id": 4492,
+                                    "title": "eduMe Demo course",
+                                    "status": "complete",
+                                    "completionDate": "2017-02-22T16:18:59.924Z"
+                                }
+                            ]
+                        }
+                    ],
+                    "lessons": [
+                        {
+                            "id": 14011,
+                            "title": "Sales Skills 101",
+                            "score": 100,
+                            "date": "2017-02-22T16:17:44.124Z",
+                            "lessonNumber": 1,
+                            "moduleId": 4492,
+                            "courseId": 4132
+                        },
+                        {
+                            "id": 14079,
+                            "title": "The basics of cold calling",
+                            "score": 70,
+                            "date": "2017-02-22T16:18:59.906Z",
+                            "lessonNumber": 2,
+                            "moduleId": 4492,
+                            "courseId": 4132
+                        }
+                    ]
+                }
+            ]
+        }
+
+
+##  Team Stats [/public/stats/team/{teamId}]
+
+###  Get Stats for Team [GET]
+Returns a CSV file of user progress on courses and lessons associated with the specified team
+
+| Column Heading              | Description                                                                          |
+|-----------------------------|--------------------------------------------------------------------------------------|
+| **Course Title**            | Course Title                                                                         |
+| **First Name**              | First name of the user.                                                              |
+| **Last Name**               | Last name of the user                                                                |
+| **Email**                   | Email address of the user.                                                           |
+| **Phone**                   | Phone number of the user.                                                            |
+| **User Info**               | An id or reference number associated with the user.                                  |
+| **User Activation Date**    | The date the user activated their account.                                           |
+| **Course Status**           | The user's status on the course. One of _Not started_, _In progress_ or _Completed_. |
+| **Course Start Date**       | The date the user started the course.                                                |
+| **Course Completion Date**  | The date the user completed all lessons in the course.                               |
+| **Lesson Score**            | The user's score in each lesson. Each lesson will be contained in its own column.    |
+| **Overall Score**           | The user's overall score for the course, calculated as the average of every lesson. This is only present if the user has completed the whole course. |
+
+
+**Use Cases**:
++ To check progress of users within a team and all courses and lessons they are assigned to
+
+
+**Considerations**:
++ If you don't have `teamId` then use get group with team
+
+
+**Related Endpoints**:
++ Get Group Details with Teams
+
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + teamId: `142` (number, required) - The id of the team to get statistics for.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (text/csv)
+
+
+        Course Title,First name,Last name,Email,Phone,User info,User activation date (UTC),Course status,Course start date (UTC),Course completion date (UTC),Lesson 1 score,Overall score
+        eduMe Demo course,Alexander,Cortez,alex.cortez@gmail.com,,,07/02/2020,Completed,11/02/2020,11/02/2020,100%,100%
+        eduMe Demo course,Maria,Rodriguez,maria.rodriguez@yahoo.com,,,15/05/2020,Not started,,,,
+
+
+# Group  Links
+##  Course Links [/user/{userId}/course/{courseId}/courseLink]
+
+###  Generate a Course Link for a User [GET]
+Generates a direct link to a course for a user. If the user has not activated their account, they will be prompted to set up a password when using the link. If the course requires enrolment for users to access, they will be enrolled when this endpoint is called.
+
+**Use Cases**:
++ SSO or SSU user to access course content within native app or email
+
+
+**Considerations**:
++ Not a seamless link generator. Requires sign in.
+
+
+**Related Endpoints**:
+none
+
+**Auth**:
++ x-api-key: `YOUR_API_KEY` (Required)
+
+
++ Parameters
+    + userId: `1424` (number, required) - The ID of the user to generate a link for.
+    + courseId: `532` (number, required) - The ID of the course to generate a link for.
+
+
++ Request (application/json)
+    + Headers
+
+            x-api-key: YOUR_API_KEY
+
+
++ Response 200 (text/html)
+
+
+        https://learn.edume.com/course/523?email=alex.cortez@gmail.com
